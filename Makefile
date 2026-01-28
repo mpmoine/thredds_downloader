@@ -3,6 +3,10 @@
 PY=.venv/bin/python
 PIP=.venv/bin/pip
 
+# variables for download target (can be overridden on the make command line)
+DEST_DIR ?= data
+WORKERS ?= 4
+
 all: install
 
 venv:
@@ -21,6 +25,9 @@ generate:
 test:
 	$(PY) -m pytest -q
 
+download:
+	$(PY) -m cmip.cli config.yaml --index-file thredds_index.json --download --dest-dir $(DEST_DIR) --workers $(WORKERS)
+
 run:
 	@if [ -f download_cmip6.sh ]; then \
 		bash download_cmip6.sh; \
@@ -37,7 +44,8 @@ help:
 	@echo "  make venv         -> create virtualenv and upgrade pip"
 	@echo "  make install      -> install dependencies from requirements.txt"
 	@echo "  make build-index  -> build thredds index (first time, network)"
-	@echo "  make generate     -> filter using local index and generate wget script"
+	@echo "  make generate     -> filter using local index and generate wget script (does not preserve the tree directory structure)"
+	@echo "  make download     -> download files using Python downloader (preserve the tree directory structure)"
 	@echo "  make test         -> run pytest"
 	@echo "  make run          -> execute generated download script (download_cmip6.sh)"
 	@echo "  make clean        -> remove .venv and generated files"

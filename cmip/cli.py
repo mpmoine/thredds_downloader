@@ -14,6 +14,9 @@ def main():
     parser.add_argument("config", help="Fichier YAML de configuration")
     parser.add_argument("--manifest-csv", help="Manifeste CSV")
     parser.add_argument("--manifest-yaml", help="Manifeste YAML")
+    parser.add_argument("--download", action="store_true", help="Télécharger les fichiers sélectionnés en Python en préservant l'arborescence DRS")
+    parser.add_argument("--dest-dir", default="data", help="Répertoire de destination pour les téléchargements Python")
+    parser.add_argument("--workers", type=int, default=4, help="Nombre de téléchargements concurrents (pour --download)")
     parser.add_argument("--build-index", action="store_true",
                     help="Reconstruire l'index local du catalogue THREDDS")
     parser.add_argument("--index-file", default="thredds_index.json",
@@ -55,14 +58,23 @@ def main():
     if args.manifest_yaml:
         writer.to_yaml(entries, args.manifest_yaml)
 
-    # Génération du script wget
-    downloader = WgetDownloader(
-        cfg.data["thredds"]["http_base"],
-        cfg.data["output"]["wget_script"]
-    )
-    downloader.generate(selected)
+    # Télécharger en Python ou générer le script wget
+    if args.download:
+        from cmip.downloader import HTTPDownloader
 
-    print(f"Script wget généré : {cfg.data['output']['wget_script']}")
+        print("Téléchargement en Python des fichiers sélectionnés...")
+        downloader = HTTPDownloader(workers=args.workers)
+        summary = downloader.download(entries, dest_dir=args.dest_dir)
+        print("Résumé :", summary)
+    else:
+        # Génération du script wget
+        downloader = WgetDownloader(
+            cfg.data["thredds"]["http_base"],
+            cfg.data["output"]["wget_script"]
+        )
+        downloader.generate(selected)
+
+        print(f"Script wget généré : {cfg.data['output']['wget_script']}")
 
 if __name__ == "__main__":
     main()

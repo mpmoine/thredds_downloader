@@ -1,11 +1,13 @@
 CMIP6 THREDDS downloader
 =========================
 
-Ce petit outil construit un index des datasets disponibles dans un catalogue THREDDS,
+Cet outil construit un index des datasets disponibles dans un catalogue THREDDS,
 filtre les chemins selon une configuration utilisateur et génère un script `wget`
-pour télécharger les fichiers sélectionnés.
+pour télécharger les fichiers sélectionnés, ou, alternativement, télécharge directement les données (sans passer par un script wget)
 
 ## Guide d'utilisation
+
+Si vous être très pressé, rendez-vous directement en section **6**
 
 ### 1 - Préparer un environnement virtuel Python et installer les dépendances
 
@@ -57,38 +59,43 @@ output:
 ```bash
 .venv/bin/python -m cmip.cli config.yaml --build-index --index-file thredds_index-cmip6.json
 ```
-Ce que ça fait : interroge le catalogue distant, parcourt les sous-catalogues
-et sauvegarde la liste des datasets dans `thredds_index_cmip6.json`.
+Ce que ça fait, c'est: interroger le catalogue distant, parcourrir les sous-catalogues et sauvegarder la liste des datasets dans `thredds_index_cmip6.json`.
 
+Pur le téléchargement de données, 2 altrnatives sont proposées: générer un script wget que vous devrez exécuter (cf. **4a**) ou télécharger directement les données (cf. **4b**).
 
-### 4 -  Générer le script wget en utilisant l'index existant
-
-```bash
-.venv/bin/python -m cmip.cli config.yaml --index-file thredds_index_cmip6.json
-```
-
-### 5 - Lancer la requête utilisateur et générer le script `wget`:
+### 4a - Lancer la requête utilisateur et générer le script `wget` en utilisant l'index existant
 
 ```bash
 .venv/bin/python -m cmip.cli config.yaml --index-file thredds_index_cmip6.json
-# Le script (par défaut `download_cmip6.sh`) sera généré et rendu exécutable.
 ```
 
-### 6 - Vérifier puis exécuter le script `wget` pour démarrer les téléchargements
+Le script `download_cmip6.sh` sera généré et il suffira de l'exécuter. 
+
+L'avantage de cette solution est qu'elle est simple, mais elle a comme incovénients de faire les téléchargements en séquentiels et de ne pas préserver l'arborescence DRS. 
+
+### 4b - Lancer la requête utilisateur et télécharger directement
+
+Ici une alternative à **4a** pour télécharger directement les données, tout en préservant l'arborescence DRS. 
 
 ```bash
-less download_cmip6.sh   # vérifier les URLs
-bash download_cmip6.sh   # ou sh download_cmip6.sh
+.venv/bin/python -m cmip.cli config.yaml --index-file thredds_index_cmip6.json --download --dest-dir <DEST_DIR> --workers <WORKERS>
 ```
+avec:
+* `DEST_DIR` : le répertoire de destination (par défaut "data").
+* `WORKERS` : le nombre de téléchargements concurrents (par défaut 4).
 
-### 7 - Pour se simplifier la vie, le Makefile
+Un autre avantage de cette solution, en plus de la préservation de la DRS, est la possibilité de lancer les téléchargements en parallèle.
+
+
+### 6 - Pour se simplifier la vie, le Makefile
 
 Un `Makefile` est fourni pour simplifier les étapes courantes. Les cibles principales correspondent aux commandes Python équivalentes décrites précédemment:
 
 - `make venv` : crée l'environnement virtuel `.venv` et met à jour pip.
 - `make install` : installe les dépendances (équivalent à `pip install -r requirements.txt`).
 - `make build-index` : construit l'index THREDDS (équivalent à `python -m cmip.cli --build-index ...`).
-- `make generate` : génère le script wget à partir de l'index local.
+- `make generate` : génère le script wget de téléchargement (arborescence non préservée)
+- `make download`: lance le téléchargement des données en parallèle (arboresence préservée)
 - `make test` : exécute la suite de tests (`pytest`).
 - `make run` : exécute le script `download_cmip6.sh` généré.
 
