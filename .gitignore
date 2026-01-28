@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Virtualenv
+.venv/
+venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+
+# Local files
+*.local
+
+# Large index/cache files
+thredds_index.json
+
+# Generated scripts
+download_cmip6.sh
+
+# Manifest files
+manifest_cmip6.csv
