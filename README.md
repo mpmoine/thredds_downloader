@@ -5,20 +5,9 @@ Ce petit outil construit un index des datasets disponibles dans un catalogue THR
 filtre les chemins selon une configuration utilisateur et génère un script `wget`
 pour télécharger les fichiers sélectionnés.
 
-Note sur les chemins THREDDS
-----------------------------
-Certains catalogues THREDDS préfixent les `urlPath` par un nom de collection ou
-institution (par exemple `CNRM-WCRP-Data/CMIP6/...`). Le code prend désormais en
-compte ce cas : il recherche dynamiquement la position du token `CMIP6` dans le
-chemin et extrait les champs DRS en conséquence.
+## Guide d'utilisation
 
-Si vous préférez contrôler explicitement ce comportement, vous pouvez
-ajouter une clé (ex. `thredds.prefix_to_strip`) dans la configuration pour
-indiquer un préfixe à ignorer lors du filtrage.
-
-Usage rapide
------------
-1. Préparer un environnement virtuel Python et installer les dépendances :
+### 1 - Préparer un environnement virtuel Python et installer les dépendances
 
 ```bash
 python -m venv .venv
@@ -26,10 +15,75 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Makefile
--------
-Un `Makefile` est fourni pour simplifier les étapes courantes. Les cibles
-principales correspondent aux commandes Python équivalentes ci-dessus :
+Cette étape est à faire une fois pour toutes.
+
+### 2 -  Préparer le fichier de configuration utilisateur
+
+Dans le fichier ```config.yaml```, l'utilisateur fournit l'adresse du serveur Thredds qu'il souhaite interroger et précise sa demande de données (project, modeles, experiments, members, variable, tables) ainsi que le nom souhaité pour le script wget de téléchargement qui sera généré. Voici un exemple de fichier de configuration:
+
+```yaml
+project: CMIP6
+mip: CMIP
+
+models:
+- CNRM-CM6-1
+- CNRM-ESM2-1
+
+experiments:
+  - historical
+  - piControl
+
+members:
+  - r1i1p1f2
+  - r2i1p1f2
+
+variables:
+  - variable: tas
+    table: Amon
+  - variable: pr
+    table: Amon
+
+thredds:
+  catalog_url: https://thredds-su.ipsl.fr/thredds/catalog/CNRM-WCRP-Data/CMIP6/catalog.xml
+  #catalog_url: https://thredds-su.ipsl.fr/thredds/catalog/CNRM-WCRP-Data/CMIP6/CMIP/CNRM-CERFACS/CNRM-ESM2-1/historical/r1i1p1f2/catalog.xml
+  http_base: https://thredds-su.ipsl.fr/thredds/fileServer/
+
+output:
+  wget_script: download_cmip6.sh
+```
+
+### 3 -  Construire l'index THREDDS la première fois (opération longue)
+
+```bash
+.venv/bin/python -m cmip.cli config.yaml --build-index --index-file thredds_index-cmip6.json
+```
+Ce que ça fait : interroge le catalogue distant, parcourt les sous-catalogues
+et sauvegarde la liste des datasets dans `thredds_index_cmip6.json`.
+
+
+### 4 -  Générer le script wget en utilisant l'index existant
+
+```bash
+.venv/bin/python -m cmip.cli config.yaml --index-file thredds_index_cmip6.json
+```
+
+### 5 - Lancer la requête utilisateur et générer le script `wget`:
+
+```bash
+.venv/bin/python -m cmip.cli config.yaml --index-file thredds_index_cmip6.json
+# Le script (par défaut `download_cmip6.sh`) sera généré et rendu exécutable.
+```
+
+### 6 - Vérifier puis exécuter le script `wget` pour démarrer les téléchargements
+
+```bash
+less download_cmip6.sh   # vérifier les URLs
+bash download_cmip6.sh   # ou sh download_cmip6.sh
+```
+
+### 7 - Pour se simplifier la vie, le Makefile
+
+Un `Makefile` est fourni pour simplifier les étapes courantes. Les cibles principales correspondent aux commandes Python équivalentes décrites précédemment:
 
 - `make venv` : crée l'environnement virtuel `.venv` et met à jour pip.
 - `make install` : installe les dépendances (équivalent à `pip install -r requirements.txt`).
@@ -38,77 +92,23 @@ principales correspondent aux commandes Python équivalentes ci-dessus :
 - `make test` : exécute la suite de tests (`pytest`).
 - `make run` : exécute le script `download_cmip6.sh` généré.
 
-Vous pouvez continuer à utiliser directement les commandes Python si
-vous préférez, mais `make` regroupe les étapes et garantit l'usage du
-virtualenv `.venv` défini par le projet.
-```
+Vous pouvez continuer à utiliser directement les commandes Python si vous préférez, mais `make` regroupe les étapes et garantit l'usage du virtualenv `.venv` défini par le projet.
 
-2. Générer le script wget en utilisant l'index existant :
 
-```bash
-.venv/bin/python -m cmip.cli config.yaml --index-file thredds_index.json
-```
+## Le coin des développeurs...
 
-Tests
------
-Les tests unitaires utilisent `pytest`. Lancez `pytest` dans la racine du
-projet pour exécuter la suite.
-
-Licence
--------
-Fichier temporaire de documentation.
-
-Exemple d'utilisation complète
-------------------------------
-Ci-dessous un exemple pas-à-pas — supposons que vous êtes dans la racine du
-projet et que `config.yaml` contient vos choix (exemples: `project: CMIP6`,
-`variables: - variable: tas / table: Amon`, etc.).
-
-1) Créer l'environnement et installer les dépendances:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-2) Construire l'index THREDDS la première fois (opération longue):
-
-```bash
-.venv/bin/python -m cmip.cli config.yaml --build-index --index-file thredds_index.json
-# Ce qui fait : interroger le catalogue distant, parcourir les sous-catalogues
-# et sauvegarder la liste des datasets dans `thredds_index.json`.
-```
-
-3) Lancer la requête utilisateur (filtrage local à partir de l'index) et
-générer le script `wget`:
-
-```bash
-.venv/bin/python -m cmip.cli config.yaml --index-file thredds_index.json
-# Le script (par défaut `download_cmip6.sh`) sera généré et rendu exécutable.
-```
-
-4) Vérifier puis exécuter le script `wget` pour démarrer les téléchargements:
-
-```bash
-less download_cmip6.sh   # vérifier les URLs
-bash download_cmip6.sh   # ou sh download_cmip6.sh
-```
-
-Remarques pratiques
--------------------
-- Si vous ne voulez pas versionner l'index local, il est listé dans `.gitignore`.
-- Si votre catalogue THREDDS ajoute un préfixe (ex. `CNRM-WCRP-Data/CMIP6/...`),
-  l'outil détecte automatiquement la position du token `CMIP6` et filtre
-  correctement les chemins. Vous pouvez aussi ajouter une option de config
-  pour un préfixe explicite si besoin (`thredds.prefix_to_strip`).
-
-Support & tests
----------------
-Les tests unitaires fournis couvrent le parsing DRS et le filtrage avec/sans
-préfixe. Pour lancer la suite de tests :
+- Notes:
+    - L'index local est pour l'instantlisté dans `.gitignore` afin de ne pas le versionner -> penser à le sortir du gitignore pour le mettre sur le repo et le fournir aux utilisateurs.
+    - Si le catalogue THREDDS ajoute un préfixe (ex. `CNRM-WCRP-Data/CMIP6/...`), l'outil détecte automatiquement la position du token `CMIP6` et filtre
+  correctement les chemins. Il sera possible d'ajouter plus tard une option de config pour un préfixe explicite si besoin (`thredds.prefix_to_strip`).
+    - Les tests unitaires utilisent `pytest`; les tests  fournis couvrent le parsing DRS et le filtrage avec/sans préfixe. Pour lancer la suite de tests :
 
 ```bash
 .venv/bin/python -m pytest -q
 ```
+
+- Améliorations possibles:
+    - Couvrir d'autres formats d'index comme CORDEX; pour cel il faut améliorer la détection de préfixes (chercher dynamiquement le token project dans la config ou permettre un champ thredds.prefix_to_strip).
+    - Optionnel : normaliser les chemins lors de la construction de l'index (supprimer automatiquement un préfixe connu), plutôt que de rendre chaque composant tolérant.
+    - Ajouter une option de logging détaillé (--debug) qui imprime quelques exemples de chemins rejetés et pourquoi.
 
