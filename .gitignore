@@ -21,10 +21,10 @@ env/
 *.local
 
 # Large index/cache files
-thredds_index.json
+thredds_index*.json
 
 # Generated scripts
-download_cmip6.sh
+download*.sh
 
 # Manifest files
-manifest_cmip6.csv
+manifest*.csv

@@ -17,8 +17,8 @@ variables:
     table: Amon
 
 thredds:
-  catalog_url: https://thredds-su.ipsl.fr/thredds/catalog/CNRM-WCRP-Data/CMIP6/catalog.xml
-  #catalog_url: https://thredds-su.ipsl.fr/thredds/catalog/CNRM-WCRP-Data/CMIP6/CMIP/CNRM-CERFACS/CNRM-ESM2-1/historical/r1i1p1f2/catalog.xml
+  #catalog_url: https://thredds-su.ipsl.fr/thredds/catalog/CNRM-WCRP-Data/CMIP6/catalog.xml
+  catalog_url: https://thredds-su.ipsl.fr/thredds/catalog/CNRM-WCRP-Data/CMIP6/CMIP/CNRM-CERFACS/CNRM-ESM2-1/historical/r1i1p1f2/catalog.xml
   http_base: https://thredds-su.ipsl.fr/thredds/fileServer/
 
 output:
