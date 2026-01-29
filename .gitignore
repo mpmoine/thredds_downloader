@@ -21,7 +21,7 @@ env/
 *.local
 
 # Large index/cache files
-thredds_index*.json
+#thredds_index*.json
 
 # Generated scripts
 download*.sh
