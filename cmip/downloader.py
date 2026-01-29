@@ -1,4 +1,10 @@
 from pathlib import Path
+import logging
+
+# minimal logging configuration; will be ignored if the application
+# already configures logging handlers
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 class WgetDownloader:
     def __init__(self, http_base, output_script):
@@ -6,9 +12,26 @@ class WgetDownloader:
         self.output_script = Path(output_script)
 
     def generate(self, paths):
+        # Keep only entries that contain '/gr/files/' (strict: no fallback)
+        write_paths = [p for p in paths if ('/gr/files/' in p) or p.startswith('gr/files/')]
+
+        # Avoid writing duplicate URLs
+        seen = set()
+        # If no matching paths, write a small script with a warning comment
+        if len(write_paths) == 0:
+            with open(self.output_script, "w") as f:
+                f.write("#!/bin/bash\n\n")
+                f.write("# WARNING: no entries with '/gr/files/' were found; no downloads written.\n")
+            self.output_script.chmod(0o755)
+            logger.warning(f"Avertissement: aucun chemin '/gr/files/' trouvé — script wget \"{self.output_script}\" créé avec un avertissement.")
+            return
+
         with open(self.output_script, "w") as f:
             f.write("#!/bin/bash\n\n")
-            for p in paths:
+            for p in write_paths:
+                if p in seen:
+                    continue
+                seen.add(p)
                 url = self.http_base + p
                 f.write(f"wget -c {url}\n")
 
@@ -72,9 +95,17 @@ class HTTPDownloader:
             return (entry, f"error: {e}", None)
 
     def download(self, entries: Iterable, dest_dir: str = "data", resume: bool = True):
+        # Only download entries whose thredds_path contains '/gr/files/'
+        entries_list = list(entries)
+        filtered = [e for e in entries_list if ("/gr/files/" in e.thredds_path) or e.thredds_path.startswith("gr/files/")]
+
+        if len(filtered) == 0:
+            logger.warning("Avertissement: aucun chemin '/gr/files/' trouvé parmi les entrées fournies ; aucun fichier ne sera téléchargé.")
+            return {"downloaded": 0, "skipped": 0, "error": 0}
+
         results = []
         with ThreadPoolExecutor(max_workers=self.workers) as ex:
-            futures = {ex.submit(self._download_one, e, dest_dir, resume): e for e in entries}
+            futures = {ex.submit(self._download_one, e, dest_dir, resume): e for e in filtered}
             for fut in as_completed(futures):
                 res = fut.result()
                 results.append(res)

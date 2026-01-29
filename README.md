@@ -7,13 +7,14 @@ pour télécharger les fichiers sélectionnés, ou, alternativement, télécharg
 
 ## Guide d'utilisation
 
-Si vous être très pressé, rendez-vous directement en section **6**
+Si vous êtes très pressé, rendez-vous directement en section **6**, mais si vous voulez comprendre les étapes, la progression de 1 à 5 est indiquée et elle ne vous prendra pas tant de temps que ça...
 
 ### 1 - Préparer un environnement virtuel Python et installer les dépendances
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
