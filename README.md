@@ -9,6 +9,26 @@ pour télécharger les fichiers sélectionnés, ou, alternativement, télécharg
 
 Si vous êtes très pressé, rendez-vous directement en section **6**, mais si vous voulez comprendre les étapes, la progression de 1 à 5 est indiquée et elle ne vous prendra pas tant de temps que ça...
 
+Pour tester rapidement sur un simple exemple:
+
+```bash
+.venv/bin/python -m cmip.cli examples/config_example_cmip6.yaml --index-file examples/thredds_index_example_cmip6.json --download --dest-dir examples/output_cmip6  --workers 2
+```
+
+Pour exectuer cet exemple, vous n'avez qu'à faire l'étape 1, les étapes 2 et 3 ayant été préparées pour vous (sur un petit sous-catalogue CMIP6). La commande ci-dessus correpond à l'étape 4b (téléchargement direct par https-python). Si vous préférez la solution de téléchargement via wget (étape 4a) alors faire simplement:
+
+```bash
+.venv/bin/python -m cmip.cli examples/config_example_cmip6.yaml --index-file examples/thredds_index_example_cmip6.json
+```
+
+Puis: 
+
+```bash
+mv download_example_cmip6.sh examples/.
+cd examples
+./download_example_cmip6.sh
+```
+
 ### 1 - Préparer un environnement virtuel Python et installer les dépendances
 
 ```bash
@@ -62,7 +82,7 @@ output:
 ```
 Ce que ça fait, c'est: interroger le catalogue distant, parcourrir les sous-catalogues et sauvegarder la liste des datasets dans `thredds_index_cmip6.json`.
 
-Pur le téléchargement de données, 2 altrnatives sont proposées: générer un script wget que vous devrez exécuter (cf. **4a**) ou télécharger directement les données (cf. **4b**).
+Pour le téléchargement de données, 2 altrnatives sont proposées: générer un script wget que vous devrez exécuter (cf. **4a**) ou télécharger directement les données (cf. **4b**).
 
 ### 4a - Lancer la requête utilisateur et générer le script `wget` en utilisant l'index existant
 

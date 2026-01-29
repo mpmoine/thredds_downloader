@@ -22,4 +22,4 @@ thredds:
   http_base: https://thredds-su.ipsl.fr/thredds/fileServer/
 
 output:
-  wget_script: download_cmip6_example.sh
+  wget_script: download_example_cmip6.sh
